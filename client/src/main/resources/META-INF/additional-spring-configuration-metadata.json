@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "project.singleData.baseUrl",
+      "type": "java.lang.Boolean",
+      "description": "enable swagger-ui document."
+    }
+  ]
+}

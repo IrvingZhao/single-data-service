@@ -1,0 +1,12 @@
+spring:
+  redis:
+    database: 4
+    password: bank2017
+    sentinel:
+      nodes:
+        - 192.168.99.172:26379
+        - 192.168.99.172:36379
+      master: mymaster
+project:
+  singleData:
+    baseUrl: http://localhost:8080/data
