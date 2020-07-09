@@ -26,9 +26,7 @@ public class WechatTokenInfo implements SingleDataInfo {
     private String data;
 
     @Override
-    public void init(Map<String, String> config, String data) {
-        // TODO 如果data为空，刷新
-        this.data = data;
+    public void init(Map<String, String> config) {
         this.appId = config.get("appId");
         this.appSecurity = config.get("appSecurity");
     }

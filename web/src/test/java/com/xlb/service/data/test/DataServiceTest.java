@@ -24,8 +24,8 @@ public class DataServiceTest {
     @Test
     public void singleGetToken() {
         String token = dataManager.getData("demo-wechat");
-        Assert.assertNotNull(token);
         System.out.println(token);
+        Assert.assertNotNull(token);
     }
 
     @Test

@@ -8,9 +8,8 @@ public interface SingleDataInfo {
      * 初始化配置
      *
      * @param config 配置信息
-     * @param data   数据
      */
-    void init(Map<String, String> config, String data);
+    void init(Map<String, String> config);
 
     /**
      * 获取数据

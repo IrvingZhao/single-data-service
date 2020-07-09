@@ -1,29 +1,37 @@
 package com.xlb.service.data.service.manager;
 
+import com.xlb.service.data.constant.Constant;
+import com.xlb.service.data.core.util.base.ObjectStringSerialUtil;
 import com.xlb.service.data.service.service.DataConfigService;
 import com.xlb.service.data.service.service.DataInfoService;
 import com.xlb.service.data.core.config.ConfigManager;
 import com.xlb.service.data.core.config.SingleDataConfig;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 
 @Component
 public class DataBaseConfigManager implements ConfigManager {
+    private final ObjectStringSerialUtil serialUtil = ObjectStringSerialUtil.getSerialUtil();
 
     private final DataInfoService infoService;
     private final DataConfigService configService;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    public DataBaseConfigManager(DataInfoService infoService, DataConfigService configService) {
+    public DataBaseConfigManager(DataInfoService infoService, DataConfigService configService, StringRedisTemplate stringRedisTemplate) {
         this.infoService = infoService;
         this.configService = configService;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     @Override
     public SingleDataConfig getConfig(String name) {
-        // TODO 读取逻辑调整
-        // 在redis中读取，redis中不存在时，读取数据库
-        // 数据保存在redis中，不使用数据库中的值
+        var configData = stringRedisTemplate.opsForValue().get(Constant.DATA_INFO_PREFIX + name);
+        if (StringUtils.isNotBlank(configData)) {
+            return serialUtil.parse(configData, SingleDataConfig.class, ObjectStringSerialUtil.SerialType.JSON);
+        }
         var dataInfo = infoService.getDataInfoByKeyword(name);
         if (dataInfo != null) {
             var configList = configService.getConfigByDataId(dataInfo.getId());
@@ -31,7 +39,9 @@ public class DataBaseConfigManager implements ConfigManager {
             configList.parallelStream().forEach((item) -> {
                 configMap.put(item.getKeyword(), item.getValue());
             });
-            return new SingleDataConfig(dataInfo.getKeyword(), dataInfo.getType(), configMap, dataInfo.getData());
+            var singleData = new SingleDataConfig(dataInfo.getKeyword(), dataInfo.getType(), configMap);
+            stringRedisTemplate.opsForValue().set(Constant.DATA_INFO_PREFIX + name, serialUtil.serial(singleData, ObjectStringSerialUtil.SerialType.JSON));
+            return singleData;
         }
         return null;
     }

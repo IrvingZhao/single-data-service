@@ -22,7 +22,7 @@ public class SingleDataFactory {
         }
         SingleDataInfo dataInfo = Type.valueOf(config.getType()).getDataInfo();
         if (config.getConfig() != null) {
-            dataInfo.init(config.getConfig(), config.getData());
+            dataInfo.init(config.getConfig());
         }
         return dataInfo;
     }
