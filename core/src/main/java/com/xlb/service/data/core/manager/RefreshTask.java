@@ -1,12 +1,12 @@
 package com.xlb.service.data.core.manager;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.util.TimerTask;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class RefreshTask extends TimerTask {
 
     private final String name;
@@ -17,11 +17,6 @@ public class RefreshTask extends TimerTask {
 
     @Override
     public void run() {
-        var managerData = dataManager.getData(name);
-        if (managerData.equals(oldData)) {
-            dataManager.refresh(name);
-        } else {
-            this.oldData = managerData;
-        }
+        dataManager.refresh(name, oldData);
     }
 }

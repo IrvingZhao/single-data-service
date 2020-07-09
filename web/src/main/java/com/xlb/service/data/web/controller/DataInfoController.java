@@ -42,7 +42,7 @@ public class DataInfoController implements ResponseBodyHandleController {
                                                    @PathVariable String old) {
         String newData = dataManager.getData(keyword);
         if (newData.equals(old)) {
-            dataManager.refresh(keyword);
+            dataManager.refresh(keyword, old);
             newData = dataManager.getData(keyword);
         }
 //        return wapData(newData);

@@ -7,6 +7,7 @@ import com.xlb.service.data.core.exception.RefreshParamException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.connection.RedisConnection;
@@ -67,11 +68,14 @@ public class SingleDataManager implements InitializingBean {
         } finally {
             lock.readLock().unlock();
         }
-        this.refresh(name);
+        this.refresh(name, "");
         return dataInfoMap.get(name);
     }
 
-    public void refresh(String name) {
+    public void refresh(String name, String oldData) {
+        if (!validOldData(name, oldData)) { // check old-data is equals cur data
+            return;
+        }
         var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(false));
         try {
             if (lock.writeLock().tryLock(18, TimeUnit.MILLISECONDS)) { // 第一次进入，锁失败场景
@@ -89,13 +93,26 @@ public class SingleDataManager implements InitializingBean {
         }
     }
 
+    private boolean validOldData(String name, String oldData) {
+        var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(false));
+        lock.readLock().lock();
+        try {
+            var mapData = this.dataInfoMap.get(name);
+            return StringUtils.isBlank(mapData) || StringUtils.equals(mapData, oldData);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
     // 实际刷新数据
     private void refreshDataTask(String name) {
+        log.info("[{}] exec refresh data task", name);
         long start = System.currentTimeMillis();
         var localData = dataFactory.getSingleData(name);
-        var refreshTask = taskMap.computeIfAbsent(name, (k) -> new RefreshTask(k, this, dataInfoMap.get(name)));
+        var refreshTask = taskMap.computeIfAbsent(name, (k) -> new RefreshTask(k, this));
         if (localData == null) {
             dataInfoMap.remove(name); // 清空数据
+            taskMap.remove(name); // 移除 task
             refreshTask.cancel();
             return;
         }
@@ -107,25 +124,28 @@ public class SingleDataManager implements InitializingBean {
             var delay = (expireTime - 120) * 1000;
             if (refreshTask.scheduledExecutionTime() > delay) {
                 refreshTask.cancel();
-                refreshTask = taskMap.compute(name, (k, v) -> new RefreshTask(k, this, dataInfoMap.get(name)));
+                refreshTask = taskMap.compute(name, (k, v) -> new RefreshTask(k, this));
             }
-
             if (refreshTask.scheduledExecutionTime() == 0) {
                 // 新增定时任务
                 refreshTimer.schedule(refreshTask, delay, delay);
             }
+
         } else {
             refreshTask.cancel();
+            taskMap.remove(name); // 移除task
+            dataInfoMap.remove(name); // 移除数据
         }
         long end = System.currentTimeMillis();
-        if (end - start > 40) { // 刷新任务执行市场，需大于 获取write lock 等待时长的两倍，并且刷新之前，都需要执行get，并进行新老比对
-            log.error("refresh task less than 25 millisecond");
+        if (end - start < 40) { // 刷新任务执行市场，需大于 获取write lock 等待时长的两倍，并且刷新之前，都需要执行get，并进行新老比对
+            log.error("refresh task less than 40 millisecond,{}", end - start);
             try {
                 Thread.sleep(40L);
             } catch (InterruptedException e) {
                 log.error("sleep error", e);
             }
         }
+        refreshTask.setOldData(data); // 设置 old 数据
     }
 
     private int refreshDataInfo(String name, SingleDataInfo dataInfo) {
