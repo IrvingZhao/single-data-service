@@ -129,4 +129,17 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>xlb-release</id>
+            <name>xlb-release</name>
+            <url>http://mvn.yixiuhuo.com/repository/xlb-release/</url>
+        </repository>
+        <snapshotRepository>
+            <id>xlb-snapshot</id>
+            <name>xlb-snapshot</name>
+            <url>http://mvn.yixiuhuo.com/repository/xlb-snapshot/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 </project>
