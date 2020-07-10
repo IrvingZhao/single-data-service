@@ -29,5 +29,6 @@ project:
 server:
   servlet:
     context-path: /data
+  port: 80
 logging:
   config: classpath:log4j2-prd.xml
