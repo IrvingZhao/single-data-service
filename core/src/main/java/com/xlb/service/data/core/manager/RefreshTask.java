@@ -6,6 +6,9 @@ import lombok.Setter;
 
 import java.util.TimerTask;
 
+/**
+ * 刷新任务
+ */
 @RequiredArgsConstructor
 public class RefreshTask extends TimerTask {
 

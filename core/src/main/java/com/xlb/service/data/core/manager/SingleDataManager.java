@@ -7,12 +7,10 @@ import com.xlb.service.data.core.exception.RefreshParamException;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -24,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.*;
 
+/**
+ * 单数据管理器
+ */
 @Slf4j
 public class SingleDataManager implements InitializingBean {
 
@@ -41,7 +42,11 @@ public class SingleDataManager implements InitializingBean {
     private final Map<String, String> dataInfoMap = new ConcurrentHashMap<>();
     private final Map<String, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
 
-    public void afterPropertiesSet() throws Exception {
+    /**
+     * 初始化数据
+     */
+    public void afterPropertiesSet() {
+        log.info("init single data manager");
         stringRedisTemplate.execute((RedisConnection con) -> {
             var option = ScanOptions.scanOptions().match(Constant.DATA_DATA_PREFIX + "*").build();
             var serializer = StringRedisSerializer.UTF_8;
@@ -57,6 +62,11 @@ public class SingleDataManager implements InitializingBean {
         });
     }
 
+    /**
+     * 获取数据
+     *
+     * @param name 配置名
+     */
     public String getData(String name) {
         var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(false));
         try {
@@ -72,27 +82,42 @@ public class SingleDataManager implements InitializingBean {
         return dataInfoMap.get(name);
     }
 
+    /**
+     * 刷新数据
+     *
+     * @param name    数据名
+     * @param oldData 原数据信息
+     */
     public void refresh(String name, String oldData) {
+        var threadName = Thread.currentThread().getName();
+        log.info("refresh data start, [{}]", name);
         if (!validOldData(name, oldData)) { // check old-data is equals cur data
             return;
         }
         var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(false));
         try {
             if (lock.writeLock().tryLock(18, TimeUnit.MILLISECONDS)) { // 第一次进入，锁失败场景
+                log.info("refresh data exec, [{}]", name);
                 try {
                     this.refreshDataTask(name);
                 } finally {
                     lock.writeLock().unlock();
                 }
+                log.info("refresh data exec finished, [{}]", name);
             } else {
+                log.info("refresh data wait, [{}]", name);
                 lock.readLock().lock();
                 lock.readLock().unlock();
+                log.info("refresh data wait end, [{}]", name);
             }
         } catch (InterruptedException e) {
-            log.error("try write log error", e);
+            log.error("try write lock error", e);
         }
     }
 
+    /**
+     * 校验原数据
+     */
     private boolean validOldData(String name, String oldData) {
         var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(false));
         lock.readLock().lock();
@@ -106,11 +131,11 @@ public class SingleDataManager implements InitializingBean {
 
     // 实际刷新数据
     private void refreshDataTask(String name) {
-        log.info("[{}] exec refresh data task", name);
         long start = System.currentTimeMillis();
         var localData = dataFactory.getSingleData(name);
         var refreshTask = taskMap.computeIfAbsent(name, (k) -> new RefreshTask(k, this));
         if (localData == null) {
+            log.error("cannot find config of [{}]", name);
             dataInfoMap.remove(name); // 清空数据
             taskMap.remove(name); // 移除 task
             refreshTask.cancel();
@@ -123,6 +148,7 @@ public class SingleDataManager implements InitializingBean {
         if (expireTime > 0) {
             var delay = (expireTime - 120) * 1000;
             if (refreshTask.scheduledExecutionTime() > delay) {
+                log.error("refresh task of [{}] delay is [{}], over than [{}]", name, refreshTask.scheduledExecutionTime(), delay);
                 refreshTask.cancel();
                 refreshTask = taskMap.compute(name, (k, v) -> new RefreshTask(k, this));
             }
@@ -132,13 +158,14 @@ public class SingleDataManager implements InitializingBean {
             }
 
         } else {
+            log.error("[{}] expire time is less than zero", name);
             refreshTask.cancel();
             taskMap.remove(name); // 移除task
             dataInfoMap.remove(name); // 移除数据
         }
         long end = System.currentTimeMillis();
         if (end - start < 40) { // 刷新任务执行市场，需大于 获取write lock 等待时长的两倍，并且刷新之前，都需要执行get，并进行新老比对
-            log.error("refresh task less than 40 millisecond,{}", end - start);
+            log.error("[{}] refresh task less than 40 millisecond,{}", name, end - start);
             try {
                 Thread.sleep(40L);
             } catch (InterruptedException e) {
@@ -148,6 +175,12 @@ public class SingleDataManager implements InitializingBean {
         refreshTask.setOldData(data); // 设置 old 数据
     }
 
+    /**
+     * 刷新
+     *
+     * @param name     数据名
+     * @param dataInfo 数据配置信息
+     */
     private int refreshDataInfo(String name, SingleDataInfo dataInfo) {
         try {
             return dataInfo.refresh();
@@ -161,11 +194,24 @@ public class SingleDataManager implements InitializingBean {
         }
     }
 
+    /**
+     * 刷新缓存
+     *
+     * @param name         数据名
+     * @param data         数据值
+     * @param expireSecond 失效时间，单位，秒
+     */
     private void refreshCache(String name, String data, int expireSecond) {
         this.dataInfoMap.put(name, data);
         this.stringRedisTemplate.opsForValue().set(Constant.DATA_DATA_PREFIX + name, data, Duration.ofSeconds(expireSecond));
     }
 
+    /**
+     * 推送数据更新
+     *
+     * @param name 数据名
+     * @param data 数据值
+     */
     private void publishEvent(String name, String data) {
         // 推送消息
         stringRedisTemplate.convertAndSend(REFRESH_CHANNEL_PREFIX + name, data);

@@ -1,6 +1,7 @@
 package com.xlb.service.data.web.config;
 
 import com.xlb.base.aspect.BindingErrorControllerAspect;
+import com.xlb.base.controller.CustomErrorController;
 import com.xlb.base.handler.ResponseBodyMessageHandle;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,9 @@ import org.springframework.aop.Advisor;
 import org.springframework.aop.aspectj.AspectJExpressionPointcut;
 import org.springframework.aop.support.DefaultBeanFactoryPointcutAdvisor;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorViewResolver;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -62,9 +65,9 @@ public class MvcConfig {
         return advisor;
     }
 
-//    @Bean
-//    public CustomErrorController errorController(ErrorAttributes errorAttributes, List<ErrorViewResolver> viewResolvers) {
-//        return new CustomErrorController(errorAttributes, serverProperties.getError(), viewResolvers);
-//    }
+    @Bean
+    public CustomErrorController errorController(ErrorAttributes errorAttributes, List<ErrorViewResolver> viewResolvers) {
+        return new CustomErrorController(errorAttributes, serverProperties.getError(), viewResolvers);
+    }
 
 }

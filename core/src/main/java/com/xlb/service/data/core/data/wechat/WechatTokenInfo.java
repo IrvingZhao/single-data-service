@@ -13,6 +13,9 @@ import java.text.MessageFormat;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * 微信 token 信息
+ */
 @Slf4j
 public class WechatTokenInfo implements SingleDataInfo {
 

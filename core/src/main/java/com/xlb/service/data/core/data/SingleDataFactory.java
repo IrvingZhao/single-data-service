@@ -9,12 +9,20 @@ import lombok.Setter;
 
 import java.util.function.Supplier;
 
+/**
+ * 单数据信息工厂
+ */
 public class SingleDataFactory {
 
     @Getter
     @Setter
     private ConfigManager configManager;
 
+    /**
+     * 获取数据信息
+     *
+     * @param name 配置名
+     */
     public SingleDataInfo getSingleData(String name) {
         SingleDataConfig config = configManager.getConfig(name);
         if (config == null) {

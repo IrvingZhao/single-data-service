@@ -2,6 +2,9 @@ package com.xlb.service.data.core.data;
 
 import java.util.Map;
 
+/**
+ * 单数据信息
+ */
 public interface SingleDataInfo {
 
     /**

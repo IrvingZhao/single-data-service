@@ -4,6 +4,7 @@ import com.xlb.service.data.client.util.base.ObjectStringSerialUtil;
 import com.xlb.service.data.client.util.http.message.HttpMessage;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.hc.core5.http.ContentType;
 
 import java.io.BufferedReader;
@@ -13,6 +14,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 public class MessageRequest implements HttpMessage {
     private static final ObjectStringSerialUtil SERIAL_UTIL = ObjectStringSerialUtil.getSerialUtil();
 
@@ -41,20 +43,25 @@ public class MessageRequest implements HttpMessage {
 
     @Override
     public void setResponseStream(InputStream inputStream) {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        String temp = null;
+        if (responseCode == 200) {
+            this.response = SERIAL_UTIL.parse(inputStream, MessageResponse.class, ObjectStringSerialUtil.SerialType.JSON);
+        } else {
+            log.error("request data error, [{}]", streamToString(inputStream));
+        }
+    }
+
+    private String streamToString(InputStream stream) {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
         StringBuilder builder = new StringBuilder();
+        String tmp = null;
         while (true) {
             try {
-                if ((temp = reader.readLine()) == null) break;
+                if ((tmp = reader.readLine()) == null) break;
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            builder.append(temp);
+            builder.append(tmp);
         }
-        System.out.println(builder.toString());
-        if (responseCode == 200) {
-            this.response = SERIAL_UTIL.parse(builder.toString(), MessageResponse.class, ObjectStringSerialUtil.SerialType.JSON);
-        }
+        return builder.toString();
     }
 }
