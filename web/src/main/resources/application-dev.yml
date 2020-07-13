@@ -28,3 +28,4 @@ project:
 server:
   servlet:
     context-path: /data
+  port: 80

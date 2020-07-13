@@ -17,6 +17,9 @@ public class RefreshTask extends TimerTask {
     @Getter
     @Setter
     private String oldData;
+    @Getter
+    @Setter
+    private long delay = -1;
 
     @Override
     public void run() {

@@ -147,16 +147,16 @@ public class SingleDataManager implements InitializingBean {
         this.publishEvent(name, data);
         if (expireTime > 0) {
             var delay = (expireTime - 120) * 1000;
-            if (refreshTask.scheduledExecutionTime() > delay) {
-                log.error("refresh task of [{}] delay is [{}], over than [{}]", name, refreshTask.scheduledExecutionTime(), delay);
+            if (refreshTask.getDelay() > delay) {
+                log.error("refresh task of [{}] delay is [{}], over than [{}]", name, refreshTask.getDelay(), delay);
                 refreshTask.cancel();
                 refreshTask = taskMap.compute(name, (k, v) -> new RefreshTask(k, this));
             }
-            if (refreshTask.scheduledExecutionTime() == 0) {
-                // 新增定时任务
+            if (refreshTask.getDelay() == -1) {
+                log.info("add refresh task of [{}], delay is [{}]", name, delay);
+                refreshTask.setDelay(delay);
                 refreshTimer.schedule(refreshTask, delay, delay);
             }
-
         } else {
             log.error("[{}] expire time is less than zero", name);
             refreshTask.cancel();
