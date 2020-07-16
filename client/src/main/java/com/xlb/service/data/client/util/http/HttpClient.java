@@ -2,6 +2,7 @@ package com.xlb.service.data.client.util.http;
 
 import com.xlb.service.data.client.util.http.config.ClientConfig;
 import com.xlb.service.data.client.util.http.enums.HttpMethod;
+import com.xlb.service.data.client.util.http.enums.KeyStoreType;
 import com.xlb.service.data.client.util.http.enums.RequestType;
 import com.xlb.service.data.client.util.http.message.HttpMessage;
 import com.xlb.service.data.client.util.http.util.ContentTypeUtil;
@@ -16,6 +17,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.client5.http.io.HttpClientConnectionManager;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactoryBuilder;
+import org.apache.hc.client5.http.ssl.TrustAllStrategy;
 import org.apache.hc.client5.http.ssl.TrustSelfSignedStrategy;
 import org.apache.hc.core5.http.*;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
@@ -25,17 +27,14 @@ import org.apache.hc.core5.http.message.BasicNameValuePair;
 import org.apache.hc.core5.http.ssl.TLS;
 import org.apache.hc.core5.ssl.SSLContexts;
 
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.net.ssl.TrustManagerFactory;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 
@@ -195,41 +194,102 @@ public class HttpClient {
         }
     }
 
-    /**
-     * 构建Https链接工厂
-     */
-    private void generateSSLFactory(HttpClientBuilder clientBuilder) {
+    private void generateSSLFactory1(HttpClientBuilder clientBuilder) {
         try {
-            if (this.config.getCertificatePath().length() > 0) {
-                KeyStore trustStore = KeyStore.getInstance(this.config.getCertificateType().name());
-                InputStream keyStream;
-                if (this.config.getCertificatePath().contains("classpath:")) {
-                    keyStream = HttpClient.class.getClassLoader().getResourceAsStream(this.config.getCertificatePath().replace("classpath:", ""));
-                } else {
-                    keyStream = new FileInputStream(this.config.getCertificatePath());
-                }
-                trustStore.load(keyStream, this.config.getCertificateKey().toCharArray());
-//                keyStream.close();
-                SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(trustStore, new TrustSelfSignedStrategy()).build();
+            KeyStore clientStore = KeyStore.getInstance("PKCS12");
+//            InputStream instream = new FileInputStream(new File(PFX_PATH));
+            InputStream instream = HttpClient.class.getClassLoader().getResourceAsStream("client.p12");
+            clientStore.load(instream, "client".toCharArray());
 
-                // TODO 设置方式
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+//             初始化客户端密钥库
+            kmf.init(clientStore, "client".toCharArray());
+//            KeyManager[] kms = kmf.getKeyManagers();
+//             创建信任库管理工厂实例
 
-                final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
-                        .setSslContext(sslContext)
-                        .setTlsVersions(TLS.V_1_2)
-                        .build();
+            KeyStore trustStore = KeyStore.getInstance("JKS");
+            InputStream trustStream = HttpClient.class.getClassLoader().getResourceAsStream("server.jks");
+            trustStore.load(trustStream, "server".toCharArray());
+//            trustStore.load(new FileInputStream("D:\\tools\\jdk-11\\lib\\security\\cacerts"), "changeit".toCharArray());
+            TrustManagerFactory tmf = TrustManagerFactory
+                    .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(trustStore);
 
-                final HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
-                        .setSSLSocketFactory(sslSocketFactory)
-                        .build();
+//            SSLContext sslContext = SSLContexts.custom()
+//                    .loadKeyMaterial(clientStore,"client".toCharArray())
+//                    .loadTrustMaterial(trustStore, new TrustSelfSignedStrategy()).build();
 
-                clientBuilder.setConnectionManager(cm);
 
-//                clientBuilder.setSSLSocketFactory(new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1"}, null, SSLConnectionSocketFactory.getDefaultHostnameVerifier()));
-            }
-        } catch (NullPointerException | KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException | KeyManagementException e) {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), new SecureRandom());
+
+            final SSLConnectionSocketFactory sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+                    .setSslContext(sslContext)
+                    .setTlsVersions(TLS.V_1_2)
+                    .build();
+
+            final HttpClientConnectionManager cm = PoolingHttpClientConnectionManagerBuilder.create()
+                    .setSSLSocketFactory(sslSocketFactory)
+                    .build();
+            clientBuilder.setConnectionManager(cm);
+
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
+    private void generateSSLFactory(HttpClientBuilder clientBuilder) {
+        try {
+            var clientStore = this.createStore(this.config.getClientStore(), this.config.getClientStoreKey(), this.config.getClientType());
+            var trustStore = this.createStore(this.config.getTrustStore(), this.config.getTrustStoreKey(), this.config.getTrustType());
+            var contextBuilder = SSLContexts.custom();
+            if (clientStore != null) {
+                contextBuilder.loadKeyMaterial(clientStore, this.config.getClientStoreKey().toCharArray());
+            }
+            if (trustStore != null) {
+                contextBuilder.loadTrustMaterial(trustStore, new TrustSelfSignedStrategy());
+            }
+            var sslSocketFactory = SSLConnectionSocketFactoryBuilder.create()
+                    .setSslContext(contextBuilder.build()).build();
+            var clientConnectManager = PoolingHttpClientConnectionManagerBuilder.create()
+                    .setSSLSocketFactory(sslSocketFactory)
+                    .build();
+            clientBuilder.setConnectionManager(clientConnectManager);
+        } catch (NoSuchAlgorithmException | KeyStoreException | UnrecoverableKeyException | KeyManagementException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private KeyStore createStore(String keyPath, String keyPass, KeyStoreType type) {
+        if (keyPath == null || "".equals(keyPath)) {
+            return null;
+        }
+        var keyStream = getStream(keyPath);
+        if (keyStream == null) {
+            return null;
+        }
+        try {
+            var keyStore = KeyStore.getInstance(type.name());
+            keyStore.load(keyStream, keyPass.toCharArray());
+            return keyStore;
+        } catch (KeyStoreException | IOException | NoSuchAlgorithmException | CertificateException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private InputStream getStream(String path) {
+        try {
+            InputStream keyStream;
+            if (path.contains("classpath:")) {
+                keyStream = HttpClient.class.getClassLoader().getResourceAsStream(path.replace("classpath:", ""));
+            } else {
+                keyStream = new FileInputStream(path);
+            }
+            return keyStream;
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

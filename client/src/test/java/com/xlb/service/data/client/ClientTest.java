@@ -18,11 +18,14 @@ public class ClientTest {
 
     @Test
     public void dataReadTest() {
-        dataManager.reloadData("demo-wechat");
-        var dataA = dataManager.getData("demo-wechat");
-        var dataB = dataManager.getData("demo-wechat");
+        var dataC = dataManager.getData("wx_template");
+        System.out.println(dataC);
+        dataManager.reloadData("wx_template");
+        var dataA = dataManager.getData("wx_template");
+        var dataB = dataManager.getData("wx_template");
         System.out.println(dataA);
         Assert.assertEquals(dataA, dataB);
+        Assert.assertNotEquals(dataA, dataC);
     }
 
 }

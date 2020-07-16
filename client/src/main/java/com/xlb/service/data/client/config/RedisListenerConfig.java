@@ -2,6 +2,9 @@ package com.xlb.service.data.client.config;
 
 import com.xlb.service.data.client.listener.SingleDataListener;
 import com.xlb.service.data.client.manager.SingleDataManager;
+import com.xlb.service.data.client.util.http.HttpClient;
+import com.xlb.service.data.client.util.http.config.ClientConfig;
+import com.xlb.service.data.client.util.http.enums.KeyStoreType;
 import com.xlb.service.data.constant.Constant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+
+import java.nio.charset.StandardCharsets;
 
 @Configuration
 public class RedisListenerConfig {
@@ -22,9 +27,30 @@ public class RedisListenerConfig {
     @Value("${project.singleData.baseUrl}")
     private String baseUrl;
 
+    @Value("${project.singleData.needCert}")
+    private Boolean needCert;
+
+    @Value("${project.singleData.clientStore}")
+    private String clientStore;
+
+    @Value("${project.singleData.clientStorePass}")
+    private String clientStoreKey;
+
+    @Value("${project.singleData.clientStoreType}")
+    private KeyStoreType clientStoreType;
+
     @Bean
     public SingleDataManager dataManager() {
-        return new SingleDataManager(baseUrl);
+        var builder = ClientConfig.builder().charset(StandardCharsets.UTF_8);
+        if (needCert) {
+            builder.clientStore(clientStore)
+                    .clientStoreKey(clientStoreKey)
+                    .clientType(clientStoreType)
+                    .trustStore("classpath:server.jks")
+                    .trustStoreKey("server")
+                    .trustType(KeyStoreType.JKS);
+        }
+        return new SingleDataManager(new HttpClient(builder.build()), baseUrl);
     }
 
     @Bean

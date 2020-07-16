@@ -4,6 +4,26 @@
       "name": "project.singleData.baseUrl",
       "type": "java.lang.String",
       "description": "enable swagger-ui document."
+    },
+    {
+      "name": "project.singleData.needCert",
+      "type": "java.lang.Boolean",
+      "description": "enable client verification."
+    },
+    {
+      "name": "project.singleData.clientStore",
+      "type": "java.lang.String",
+      "description": "client key store path."
+    },
+    {
+      "name": "project.singleData.clientStorePass",
+      "type": "java.lang.String",
+      "description": "client key store password."
+    },
+    {
+      "name": "project.singleData.clientStoreType",
+      "type": "com.xlb.service.data.client.util.http.enums.KeyStoreType",
+      "description": "client key store password."
     }
   ]
 }

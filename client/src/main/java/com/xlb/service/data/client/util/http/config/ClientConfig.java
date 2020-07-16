@@ -1,48 +1,22 @@
 package com.xlb.service.data.client.util.http.config;
 
 import com.xlb.service.data.client.util.http.enums.KeyStoreType;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.nio.charset.Charset;
 
+@Getter
+@Setter
+@Builder
 public class ClientConfig {
-    private String certificatePath;
-    private String certificateKey;
-    private KeyStoreType certificateType;
     private Charset charset;
+    private KeyStoreType clientType;
+    private String clientStore;
+    private String clientStoreKey;
 
-    public ClientConfig setCertificatePath(String certificatePath) {
-        this.certificatePath = certificatePath;
-        return this;
-    }
-
-    public ClientConfig setCertificateKey(String certificateKey) {
-        this.certificateKey = certificateKey;
-        return this;
-    }
-
-    public ClientConfig setCertificateType(KeyStoreType certificateType) {
-        this.certificateType = certificateType;
-        return this;
-    }
-
-    public ClientConfig setCharset(Charset charset) {
-        this.charset = charset;
-        return this;
-    }
-
-    public String getCertificatePath() {
-        return certificatePath;
-    }
-
-    public String getCertificateKey() {
-        return certificateKey;
-    }
-
-    public KeyStoreType getCertificateType() {
-        return certificateType;
-    }
-
-    public Charset getCharset() {
-        return charset;
-    }
+    private KeyStoreType trustType;
+    private String trustStore;
+    private String trustStoreKey;
 }

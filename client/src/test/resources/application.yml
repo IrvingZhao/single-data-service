@@ -9,4 +9,7 @@ spring:
       master: mymaster
 project:
   singleData:
-    baseUrl: http://localhost:8080/data
+    baseUrl: https://single.xiuleba.com.cn/data
+    clientStore: classpath:client.p12
+    clientStorePass: client
+    clientStoreType: PKCS12

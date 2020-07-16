@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @RequiredArgsConstructor
 @Slf4j
 public class SingleDataManager {
-    private final HttpClient client = new HttpClient();
+    private final HttpClient client;
 
     private final String remoteUrl;
 
@@ -45,10 +45,14 @@ public class SingleDataManager {
         var lock = lockMap.computeIfAbsent(name, (k) -> new ReentrantReadWriteLock(true));
         try {
             lock.readLock().lock();
-            return dataMap.get(name);
+            if (dataMap.containsKey(name)) {
+                return dataMap.get(name);
+            }
         } finally {
             lock.readLock().unlock();
         }
+        this.reloadData(name);
+        return this.getData(name);
     }
 
     public void updateData(String name, String data) {
