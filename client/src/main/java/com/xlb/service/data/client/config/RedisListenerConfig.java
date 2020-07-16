@@ -6,6 +6,7 @@ import com.xlb.service.data.client.util.http.HttpClient;
 import com.xlb.service.data.client.util.http.config.ClientConfig;
 import com.xlb.service.data.client.util.http.enums.KeyStoreType;
 import com.xlb.service.data.constant.Constant;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import java.nio.charset.StandardCharsets;
 
 @Configuration
+@Slf4j
 public class RedisListenerConfig {
 
     private final RedisConnectionFactory redisConnectionFactory;
@@ -43,6 +45,7 @@ public class RedisListenerConfig {
     public SingleDataManager dataManager() {
         var builder = ClientConfig.builder().charset(StandardCharsets.UTF_8);
         if (needCert) {
+            log.info("enable client verification");
             builder.clientStore(clientStore)
                     .clientStoreKey(clientStoreKey)
                     .clientType(clientStoreType)
