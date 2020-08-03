@@ -10,7 +10,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication
 @EnableTransactionManagement
-@ComponentScan(basePackages = "com.xlb.service.data")
+@ComponentScan(basePackages = {"com.xlb.service.data", "com.xlb.base.config"})
 @MapperScan(basePackages = "com.xlb.service.data.**.mapper", markerInterface = BaseMapper.class)
 public class SingleDataServiceApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {

@@ -202,8 +202,10 @@ public class SingleDataManager implements InitializingBean {
      * @param expireSecond 失效时间，单位，秒
      */
     private void refreshCache(String name, String data, int expireSecond) {
-        this.dataInfoMap.put(name, data);
-        this.stringRedisTemplate.opsForValue().set(Constant.DATA_DATA_PREFIX + name, data, Duration.ofSeconds(expireSecond));
+        if (StringUtils.isNotEmpty(data)) {
+            this.dataInfoMap.put(name, data);
+            this.stringRedisTemplate.opsForValue().set(Constant.DATA_DATA_PREFIX + name, data, Duration.ofSeconds(expireSecond));
+        }
     }
 
     /**
