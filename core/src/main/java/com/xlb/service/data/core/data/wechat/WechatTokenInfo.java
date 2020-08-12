@@ -47,6 +47,10 @@ public class WechatTokenInfo implements SingleDataInfo {
         WechatTokenRequestMessage requestMessage = new WechatTokenRequestMessage(this.appId, this.appSecurity);
         client.sendMessage(requestMessage);
         WechatTokenResponse response = requestMessage.getTokenResponse();
+        if (response == null) {
+            log.error("http request error, [{}]", this.appId);
+            return this.refresh();
+        }
         String errorCode = response.getErrorCode();
         if (StringUtils.isBlank(errorCode) || "0".equals(errorCode)) {
             this.data = response.getAccessToken();
@@ -55,7 +59,7 @@ public class WechatTokenInfo implements SingleDataInfo {
         } else if ("-1".equals(errorCode)) {
             return this.refresh();
         } else {
-            String msg = MessageFormat.format("[{0}] refresh token failed.[{1}]:{2}",
+            String msg = MessageFormat.format("Wechat [{0}] refresh token failed.[{1}]:{2}",
                     this.appId, response.getErrorCode(), response.getErrMsg());
             log.error(msg);
             refreshTime.set(0);

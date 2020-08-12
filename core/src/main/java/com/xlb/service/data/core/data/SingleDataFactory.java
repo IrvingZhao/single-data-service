@@ -2,6 +2,7 @@ package com.xlb.service.data.core.data;
 
 import com.xlb.service.data.core.config.ConfigManager;
 import com.xlb.service.data.core.config.SingleDataConfig;
+import com.xlb.service.data.core.data.huawei.HuaweiTokenInfo;
 import com.xlb.service.data.core.data.wechat.WechatTokenInfo;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class SingleDataFactory {
     @RequiredArgsConstructor
     public enum Type {
         WECHAT(WechatTokenInfo::new),
+        HUAWEI(HuaweiTokenInfo::new),
         ;
         private final Supplier<SingleDataInfo> dataGetter;
 
