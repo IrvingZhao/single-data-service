@@ -16,12 +16,11 @@ public class DataInfoService extends BaseService<DataInfoMapper, DataInfo> {
         return mapper.selectOneByExample(example);
     }
 
-    public void updateDataByKeyword(String keyword, String data) {
-        var record = new DataInfo();
-        record.setData(data);
-        var example = new Example(DataInfo.class);
-        example.createCriteria().andEqualTo("keyword", keyword);
-        mapper.updateByExampleSelective(record, example);
+    public int saveDataInfo(DataInfo record) {
+        return mapper.insertSelective(record);
     }
 
+    public int updateDataInfo(DataInfo record) {
+        return mapper.updateByPrimaryKeySelective(record);
+    }
 }

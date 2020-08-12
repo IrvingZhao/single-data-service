@@ -27,4 +27,10 @@ public class DataConfigService extends BaseService<DataConfigMapper, DataConfig>
         }).forEach(mapper::insertSelective);
     }
 
+    public void cleanOldConfig(int dataId) {
+        var example = new Example(DataConfig.class);
+        example.createCriteria().andEqualTo("dataId", dataId);
+        mapper.deleteByExample(example);
+    }
+
 }

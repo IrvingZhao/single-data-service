@@ -2,7 +2,15 @@ import com.xlb.service.data.client.remote.MessageRequest;
 import com.xlb.service.data.client.util.http.HttpClient;
 import com.xlb.service.data.client.util.http.config.ClientConfig;
 import com.xlb.service.data.client.util.http.enums.KeyStoreType;
+import com.xlb.service.data.client.util.http.message.HttpMessage;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 
 public class Demo {
@@ -17,8 +25,8 @@ public class Demo {
         MessageRequest request = new MessageRequest("https://single.xiuleba.com.cn/index.html", "", "");
         var config = ClientConfig.builder()
                 .clientType(KeyStoreType.PKCS12)
-                .clientStore("classpath:client.p12")
-                .clientStoreKey("client")
+                .clientStore("classpath:message.p12")
+                .clientStoreKey("message")
                 .trustType(KeyStoreType.JKS)
                 .trustStore("classpath:server.jks")
                 .trustStoreKey("server").build();
@@ -28,6 +36,31 @@ public class Demo {
         var response = request.getResponse();
         System.out.println(response);
 //        System.out.println(response.getData());
+    }
+
+    public static void normal() {
+        DemoMessage request = new DemoMessage("http://www.baidu.com");
+        var config = ClientConfig.builder().charset(StandardCharsets.UTF_8).build();
+        var client = new HttpClient(config);
+        client.sendMessage(request);
+    }
+
+    @Getter
+    @RequiredArgsConstructor
+    public static class DemoMessage implements HttpMessage {
+        private final String requestUrl;
+
+        @Override
+        public void setResponseStream(InputStream inputStream) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                String tmp;
+                while ((tmp = reader.readLine()) != null) {
+                    System.out.println(tmp);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

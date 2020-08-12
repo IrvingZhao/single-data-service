@@ -1,9 +1,0 @@
-{
-  "properties": [
-    {
-      "name": "project.swagger.enable",
-      "type": "java.lang.Boolean",
-      "description": "enable swagger-ui document."
-    }
-  ]
-}

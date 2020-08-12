@@ -29,7 +29,7 @@ public class SingleDataFactory {
         if (config == null) {
             return null;
         }
-        SingleDataInfo dataInfo = Type.valueOf(config.getType()).getDataInfo();
+        SingleDataInfo dataInfo = config.getType().getDataInfo();
         if (config.getConfig() != null) {
             dataInfo.init(config.getConfig());
         }

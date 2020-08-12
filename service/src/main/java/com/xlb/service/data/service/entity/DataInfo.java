@@ -1,6 +1,7 @@
 package com.xlb.service.data.service.entity;
 
 import com.xlb.base.entity.DFlagEntity;
+import com.xlb.service.data.core.data.SingleDataFactory;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,7 +18,7 @@ public class DataInfo extends DFlagEntity {
 
     private String keyword;
 
-    private String type;
+    private SingleDataFactory.Type type;
 
     private String data;
 }
