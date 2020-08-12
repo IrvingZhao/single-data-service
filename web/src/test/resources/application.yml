@@ -22,9 +22,12 @@ project:
     enable: true
     title: 单数据服务
     description: 单数据服务接口文档
+    base-package: com.xlb.service.data.web.controller
   mvc:
     default-error-code: 100000
     error-expression: execution(* com.xlb.service.data..*.controller..*.*(..))
 server:
   servlet:
     context-path: /data
+logging:
+  config: classpath:log4j2.xml

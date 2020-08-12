@@ -6,6 +6,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import java.util.Map;
 
 @Getter
@@ -14,9 +16,11 @@ import java.util.Map;
 public class ConfigAddReq {
 
     @ApiModelProperty("配置名称，在获取数据时传入，保持唯一")
+    @NotEmpty
     private String name;
 
     @ApiModelProperty("配置类型")
+    @NotNull
     private SingleDataFactory.Type type;
 
     @ApiModelProperty("配置参数")

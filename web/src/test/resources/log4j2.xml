@@ -2,7 +2,7 @@
 <Configuration status="WARN" monitorInterval="1800">
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n" />
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
         <!-- 日志输出文件配置-->
         <!--  <RollingFile name="RollingFile" fileName="logs/seller.log"
@@ -13,20 +13,23 @@
     </Appenders>
     <Loggers>
         <!--<Logger name="org.springframework" level="info" additivity="false">-->
-            <!--<AppenderRef ref="Console" />-->
-            <!--&lt;!&ndash;  <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
+        <!--<AppenderRef ref="Console" />-->
+        <!--&lt;!&ndash;  <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
         <!--</Logger>-->
         <!--<Logger name="java.sql.ResultSet" level="debug" additivity="false">-->
-            <!--<AppenderRef ref="Console" />-->
-            <!--&lt;!&ndash; <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
+        <!--<AppenderRef ref="Console" />-->
+        <!--&lt;!&ndash; <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
         <!--</Logger>-->
         <!--<Logger name="com.lasun" level="debug" additivity="false">-->
-            <!--<AppenderRef ref="Console" />-->
-            <!--&lt;!&ndash;  <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
+        <!--<AppenderRef ref="Console" />-->
+        <!--&lt;!&ndash;  <AppenderRef ref="RollingFile" /> &ndash;&gt;-->
         <!--</Logger>-->
         <Root level="info">
-            <AppenderRef ref="Console" />
+            <AppenderRef ref="Console"/>
             <!-- <AppenderRef ref="RollingFile" /> -->
         </Root>
+        <Logger name="org.mybatis">
+            <AppenderRef ref="Console"/>
+        </Logger>
     </Loggers>
 </Configuration>

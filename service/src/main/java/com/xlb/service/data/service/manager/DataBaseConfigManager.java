@@ -1,5 +1,6 @@
 package com.xlb.service.data.service.manager;
 
+import com.xlb.base.constract.TrueFalseEnum;
 import com.xlb.base.exception.CodeUnCheckException;
 import com.xlb.service.data.constant.Constant;
 import com.xlb.service.data.core.util.base.ObjectStringSerialUtil;
@@ -55,7 +56,7 @@ public class DataBaseConfigManager implements ConfigManager {
     public void saveConfig(SingleDataConfig config) {
         var dataInfo = infoService.getDataInfoByKeyword(config.getName());
         if (dataInfo != null) {
-            throw new CodeUnCheckException(ConfigError.CONFIG_KEY_EXPIRE, config.getName());
+            throw new CodeUnCheckException(ConfigError.CONFIG_KEY_EXITS, config.getName());
         }
         saveOrUpdate(config, null);
     }
@@ -71,6 +72,7 @@ public class DataBaseConfigManager implements ConfigManager {
     private void saveOrUpdate(SingleDataConfig config, DataInfo dataInfo) {
         if (dataInfo == null) {
             dataInfo = new DataInfo();
+            dataInfo.setDFlag(TrueFalseEnum.N);
         }
         dataInfo.setKeyword(config.getName());
         dataInfo.setType(config.getType());

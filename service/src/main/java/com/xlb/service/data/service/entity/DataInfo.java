@@ -18,6 +18,7 @@ public class DataInfo extends DFlagEntity {
 
     private String keyword;
 
+    @Column(name = "type")
     private SingleDataFactory.Type type;
 
     private String data;

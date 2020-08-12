@@ -18,6 +18,9 @@ public class DataConfigService extends BaseService<DataConfigMapper, DataConfig>
     }
 
     public void saveConfig(int dataId, Map<String, String> configs) {
+        if (configs == null) {
+            return;
+        }
         configs.entrySet().parallelStream().map((entity) -> {
             DataConfig result = new DataConfig();
             result.setDataId(dataId);
@@ -25,6 +28,14 @@ public class DataConfigService extends BaseService<DataConfigMapper, DataConfig>
             result.setValue(entity.getValue());
             return result;
         }).forEach(mapper::insertSelective);
+//        configs.entrySet().parallelStream().forEachOrdered((entity) -> {
+//            DataConfig result = new DataConfig();
+//            result.setDataId(dataId);
+//            result.setKeyword(entity.getKey());
+//            result.setValue(entity.getValue());
+//            mapper.insertSelective(result);
+////            return result;
+//        });
     }
 
     public void cleanOldConfig(int dataId) {

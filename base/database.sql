@@ -6,7 +6,7 @@ drop table if exists single_data_config;
 /*==============================================================*/
 create table single_data_config
 (
-    id                   bigint not null,
+    id                   bigint not null auto_increment,
     data_id              bigint comment '数据id',
     keyword              varchar(50) comment '配置key',
     value                varchar(255) comment 'value',
