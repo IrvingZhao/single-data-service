@@ -47,14 +47,14 @@ public class HuaweiTokenRequest implements HttpMessage {
 
     @Override
     public HttpMethod getRequestMethod() {
-        return HttpMethod.GET;
+        return HttpMethod.POST;
     }
 
     @Override
     public void setResponseStream(InputStream inputStream) {
         if (this.responseCode == 200) {
             var nspStatus = responseHead.get("NSP_STATUS");
-            if ("0".equals(nspStatus)) {
+            if ("0".equals(nspStatus) || nspStatus == null) {
                 this.tokenResponse = SERIAL_UTIL.parse(inputStream, HuaweiTokenResponse.class, ObjectStringSerialUtil.SerialType.JSON);
             } else {
                 this.tokenResponse = new HuaweiTokenResponse();
